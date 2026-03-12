@@ -12,6 +12,7 @@ Upload any file → get a **download link** + **QR code** → share instantly.
 
 </div>
 
+![FileShare Preview](pictures/FileShare.png)
 ---
 
 ## 📁 Folder Structure
