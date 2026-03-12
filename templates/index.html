@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FileShare — Drop & Share</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* ── Reset & tokens ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #04050a;
+    --surface:  #0d0f1a;
+    --border:   #1c2035;
+    --accent:   #4f8eff;
+    --accent2:  #00e5c0;
+    --text:     #dde3f5;
+    --muted:    #5a6380;
+    --danger:   #ff4f6e;
+    --success:  #00e5c0;
+    --radius:   14px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ── Animated grid background ───────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(79,142,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,142,255,.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Glow orbs ──────────────────────────────────────────────── */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    animation: float 12s ease-in-out infinite;
+  }
+  .orb-1 { width: 500px; height: 500px; background: rgba(79,142,255,.12); top: -150px; left: -150px; animation-delay: 0s; }
+  .orb-2 { width: 400px; height: 400px; background: rgba(0,229,192,.08); bottom: -100px; right: -100px; animation-delay: 4s; }
+
+  @keyframes float {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%      { transform: translate(30px,-30px) scale(1.05); }
+  }
+
+  /* ── Layout ─────────────────────────────────────────────────── */
+  main {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2.5rem;
+    box-shadow: 0 0 0 1px rgba(79,142,255,.06), 0 32px 80px rgba(0,0,0,.6);
+    animation: slideUp .5s cubic-bezier(.22,.68,0,1.2) both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(32px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  .logo {
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: 2rem;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+  }
+  .logo h1 {
+    font-size: 1.5rem; font-weight: 800;
+    letter-spacing: -.02em;
+    background: linear-gradient(90deg, var(--text), var(--muted));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .logo span { font-size: .75rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+  /* ── Drop zone ───────────────────────────────────────────────── */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .25s, background .25s;
+    position: relative;
+    margin-bottom: 1.25rem;
+  }
+  .dropzone:hover,
+  .dropzone.dragover {
+    border-color: var(--accent);
+    background: rgba(79,142,255,.04);
+  }
+  .dropzone input[type="file"] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .dz-icon { font-size: 2.2rem; margin-bottom: .75rem; display: block; }
+  .dz-label { font-size: 1rem; font-weight: 600; color: var(--text); }
+  .dz-sub   { font-size: .8rem; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: .3rem; }
+
+  .file-chosen {
+    margin-top: .75rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .8rem;
+    color: var(--accent2);
+    display: none;
+    word-break: break-all;
+  }
+
+  /* ── Description ─────────────────────────────────────────────── */
+  label.field-label {
+    display: block;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: .5rem;
+    font-family: 'DM Mono', monospace;
+  }
+
+  textarea {
+    width: 100%;
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: .85rem;
+    padding: .75rem 1rem;
+    resize: none;
+    height: 70px;
+    outline: none;
+    transition: border-color .2s;
+    margin-bottom: 1.5rem;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { border-color: var(--accent); }
+
+  /* ── Button ──────────────────────────────────────────────────── */
+  .btn-upload {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: .85rem;
+    cursor: pointer;
+    letter-spacing: .03em;
+    transition: opacity .2s, transform .15s;
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
+  }
+  .btn-upload:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+  .btn-upload:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Progress ─────────────────────────────────────────────────── */
+  .progress-wrap {
+    margin-top: 1.25rem;
+    display: none;
+  }
+  .progress-bar-bg {
+    background: var(--border);
+    border-radius: 999px;
+    height: 4px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 999px;
+    width: 0%;
+    transition: width .3s;
+  }
+  .progress-label {
+    font-family: 'DM Mono', monospace;
+    font-size: .75rem;
+    color: var(--muted);
+    margin-top: .4rem;
+    text-align: right;
+  }
+
+  /* ── Result card ─────────────────────────────────────────────── */
+  #result {
+    display: none;
+    margin-top: 2rem;
+    background: rgba(0,229,192,.04);
+    border: 1px solid rgba(0,229,192,.2);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    animation: slideUp .4s ease both;
+  }
+  .result-header {
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .8rem; color: var(--accent2);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 1.25rem;
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+  .result-header::before {
+    content: '';
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent2);
+    display: inline-block;
+    box-shadow: 0 0 8px var(--accent2);
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .result-info { display: flex; flex-direction: column; gap: .75rem; }
+
+  .info-row { display: flex; flex-direction: column; gap: .15rem; }
+  .info-row .key {
+    font-family: 'DM Mono', monospace;
+    font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+  }
+  .info-row .val {
+    font-size: .9rem; font-weight: 600; word-break: break-all;
+  }
+  .info-row .val.desc { font-weight: 400; font-size: .85rem; color: #b0bad8; }
+
+  .link-box {
+    display: flex; align-items: center; gap: .5rem;
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .5rem .75rem;
+  }
+  .link-box a {
+    font-family: 'DM Mono', monospace;
+    font-size: .8rem;
+    color: var(--accent);
+    text-decoration: none;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .link-box a:hover { text-decoration: underline; }
+  .copy-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 1rem; padding: 0 .2rem;
+    transition: color .2s;
+  }
+  .copy-btn:hover { color: var(--accent2); }
+
+  .qr-box {
+    background: #f0f4ff;
+    border-radius: 10px;
+    padding: .5rem;
+    width: 120px; height: 120px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .qr-box img { width: 100%; height: 100%; object-fit: contain; }
+
+  .btn-new {
+    margin-top: 1.25rem;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: .6rem;
+    font-family: 'Syne', sans-serif;
+    font-size: .85rem;
+    cursor: pointer;
+    transition: border-color .2s, color .2s;
+  }
+  .btn-new:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ── Error ───────────────────────────────────────────────────── */
+  .error-msg {
+    display: none;
+    margin-top: 1rem;
+    background: rgba(255,79,110,.08);
+    border: 1px solid rgba(255,79,110,.3);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .8rem;
+    color: var(--danger);
+  }
+
+  /* ── Footer ──────────────────────────────────────────────────── */
+  footer {
+    position: relative; z-index: 1;
+    margin-top: 2.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .72rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 1.5rem; }
+    .result-grid { grid-template-columns: 1fr; }
+    .qr-box { margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<main>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">⬡</div>
+      <div>
+        <h1>FileShare</h1>
+        <span>local network · instant links</span>
+      </div>
+    </div>
+
+    <!-- Drop zone -->
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" />
+      <span class="dz-icon">📂</span>
+      <div class="dz-label">Drop your file here</div>
+      <div class="dz-sub">or click to browse · max 100 MB</div>
+      <div class="file-chosen" id="fileChosen"></div>
+    </div>
+
+    <!-- Description -->
+    <label class="field-label" for="desc">File description (optional)</label>
+    <textarea id="desc" maxlength="200" placeholder="e.g. Q3 report – final revision, shared by Alex…"></textarea>
+
+    <!-- Upload button -->
+    <button class="btn-upload" id="uploadBtn" disabled>
+      <span>⬆</span> Share File
+    </button>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">0%</div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- Result -->
+    <div id="result">
+      <div class="result-header">File shared successfully</div>
+      <div class="result-grid">
+        <div class="result-info">
+          <div class="info-row">
+            <span class="key">Filename</span>
+            <span class="val" id="resName"></span>
+          </div>
+          <div class="info-row">
+            <span class="key">Size</span>
+            <span class="val" id="resSize"></span>
+          </div>
+          <div class="info-row" id="resDescRow" style="display:none">
+            <span class="key">Description</span>
+            <span class="val desc" id="resDesc"></span>
+          </div>
+          <div class="info-row">
+            <span class="key">Download link</span>
+            <div class="link-box">
+              <a id="resLink" href="#" target="_blank"></a>
+              <button class="copy-btn" id="copyBtn" title="Copy link">⎘</button>
+            </div>
+          </div>
+        </div>
+        <div class="qr-box">
+          <img id="qrImg" src="" alt="QR Code" />
+        </div>
+      </div>
+      <button class="btn-new" id="newBtn">+ Share another file</button>
+    </div>
+  </div>
+
+  <footer>FileShare runs on your local network. Links expire when the server stops.</footer>
+</main>
+
+<script>
+const fileInput  = document.getElementById('fileInput');
+const dropzone   = document.getElementById('dropzone');
+const fileChosen = document.getElementById('fileChosen');
+const uploadBtn  = document.getElementById('uploadBtn');
+const descEl     = document.getElementById('desc');
+const progressWrap = document.getElementById('progressWrap');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const errorMsg   = document.getElementById('errorMsg');
+const result     = document.getElementById('result');
+const newBtn     = document.getElementById('newBtn');
+const copyBtn    = document.getElementById('copyBtn');
+
+let selectedFile = null;
+
+// ── Drag & drop ──────────────────────────────────────────────────────────
+dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', ()=> dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) setFile(f);
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) setFile(fileInput.files[0]);
+});
+
+function setFile(f) {
+  selectedFile = f;
+  fileChosen.textContent = `✓ ${f.name}  (${humanSize(f.size)})`;
+  fileChosen.style.display = 'block';
+  uploadBtn.disabled = false;
+  hideError();
+  result.style.display = 'none';
+}
+
+function humanSize(n) {
+  const u = ['B','KB','MB','GB'];
+  let i = 0;
+  while (n >= 1024 && i < u.length-1) { n /= 1024; i++; }
+  return n.toFixed(1) + ' ' + u[i];
+}
+
+// ── Upload ────────────────────────────────────────────────────────────────
+uploadBtn.addEventListener('click', () => {
+  if (!selectedFile) return;
+
+  const fd = new FormData();
+  fd.append('file', selectedFile);
+  fd.append('description', descEl.value.trim());
+
+  uploadBtn.disabled = true;
+  progressWrap.style.display = 'block';
+  hideError();
+
+  const xhr = new XMLHttpRequest();
+
+  xhr.upload.addEventListener('progress', e => {
+    if (e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 100);
+      progressFill.style.width = pct + '%';
+      progressLabel.textContent = pct + '%';
+    }
+  });
+
+  xhr.addEventListener('load', () => {
+    progressWrap.style.display = 'none';
+    uploadBtn.disabled = false;
+
+    if (xhr.status === 200) {
+      const d = JSON.parse(xhr.responseText);
+      showResult(d);
+    } else {
+      let msg = 'Upload failed.';
+      try { msg = JSON.parse(xhr.responseText).error || msg; } catch(_){}
+      showError(msg);
+    }
+  });
+
+  xhr.addEventListener('error', () => {
+    progressWrap.style.display = 'none';
+    uploadBtn.disabled = false;
+    showError('Network error. Is the server running?');
+  });
+
+  xhr.open('POST', '/upload');
+  xhr.send(fd);
+});
+
+// ── Result display ────────────────────────────────────────────────────────
+function showResult(d) {
+  document.getElementById('resName').textContent = d.original_name;
+  document.getElementById('resSize').textContent = d.size_human;
+
+  const descRow = document.getElementById('resDescRow');
+  if (d.description) {
+    document.getElementById('resDesc').textContent = d.description;
+    descRow.style.display = 'flex';
+  } else {
+    descRow.style.display = 'none';
+  }
+
+  const linkEl = document.getElementById('resLink');
+  linkEl.href = d.download_url;
+  linkEl.textContent = d.download_url;
+
+  document.getElementById('qrImg').src = 'data:image/png;base64,' + d.qr_b64;
+
+  result.style.display = 'block';
+  result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Copy link ─────────────────────────────────────────────────────────────
+copyBtn.addEventListener('click', () => {
+  const url = document.getElementById('resLink').href;
+  navigator.clipboard.writeText(url).then(() => {
+    copyBtn.textContent = '✓';
+    setTimeout(() => copyBtn.textContent = '⎘', 1500);
+  });
+});
+
+// ── New upload ────────────────────────────────────────────────────────────
+newBtn.addEventListener('click', () => {
+  selectedFile = null;
+  fileInput.value = '';
+  fileChosen.style.display = 'none';
+  fileChosen.textContent = '';
+  descEl.value = '';
+  uploadBtn.disabled = true;
+  result.style.display = 'none';
+  progressFill.style.width = '0%';
+  progressLabel.textContent = '0%';
+  hideError();
+  dropzone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.style.display = 'block';
+}
+function hideError() {
+  errorMsg.style.display = 'none';
+}
+</script>
+</body>
+</html>
