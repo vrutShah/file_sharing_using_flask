@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -281,5 +281,279 @@ function copyLink() {
   });
 }
 </script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ info.original_name }} — FileShare</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+--bg:#04050a;
+--surface:#0d0f1a;
+--border:#1c2035;
+--accent:#4f8eff;
+--accent2:#00e5c0;
+--text:#dde3f5;
+--muted:#5a6380;
+--radius:14px;
+}
+
+body{
+background:var(--bg);
+color:var(--text);
+font-family:'Syne',sans-serif;
+min-height:100vh;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+padding:3rem 1rem;
+}
+
+/* Background grid */
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background-image:
+linear-gradient(rgba(79,142,255,.04) 1px,transparent 1px),
+linear-gradient(90deg,rgba(79,142,255,.04) 1px,transparent 1px);
+background-size:48px 48px;
+pointer-events:none;
+}
+
+/* floating orbs */
+.orb{
+position:fixed;
+border-radius:50%;
+filter:blur(120px);
+animation:float 12s ease-in-out infinite;
+}
+
+.orb-1{
+width:500px;height:500px;
+background:rgba(79,142,255,.1);
+top:-150px;left:-150px;
+}
+
+.orb-2{
+width:350px;height:350px;
+background:rgba(0,229,192,.07);
+bottom:-100px;right:-100px;
+animation-delay:5s;
+}
+
+@keyframes float{
+0%,100%{transform:translate(0,0)}
+50%{transform:translate(20px,-20px)}
+}
+
+/* Card */
+
+.card{
+max-width:520px;
+width:100%;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:var(--radius);
+padding:2.5rem;
+box-shadow:0 30px 80px rgba(0,0,0,.6);
+}
+
+/* Badge */
+
+.badge{
+display:inline-flex;
+align-items:center;
+gap:.4rem;
+background:rgba(79,142,255,.1);
+border:1px solid rgba(79,142,255,.2);
+padding:.3rem .8rem;
+border-radius:999px;
+font-family:'DM Mono',monospace;
+font-size:.7rem;
+color:var(--accent);
+margin-bottom:1.5rem;
+}
+
+.badge::before{
+content:"";
+width:6px;height:6px;
+background:var(--accent);
+border-radius:50%;
+}
+
+/* File info */
+
+.file-info{
+display:flex;
+gap:1rem;
+align-items:center;
+margin-bottom:1.5rem;
+}
+
+.file-icon{
+width:60px;height:60px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:12px;
+background:linear-gradient(135deg,rgba(79,142,255,.15),rgba(0,229,192,.1));
+border:1px solid rgba(79,142,255,.2);
+font-size:1.8rem;
+}
+
+.file-meta h2{
+font-size:1.1rem;
+word-break:break-word;
+}
+
+.size{
+font-family:'DM Mono',monospace;
+font-size:.75rem;
+color:var(--muted);
+}
+
+/* description */
+
+.desc{
+background:rgba(255,255,255,.03);
+border:1px solid var(--border);
+border-left:3px solid var(--accent2);
+padding:.9rem;
+border-radius:8px;
+font-size:.85rem;
+margin-bottom:1.5rem;
+font-style:italic;
+}
+
+/* QR */
+
+.qr{
+display:flex;
+gap:1rem;
+align-items:center;
+margin-bottom:1.5rem;
+}
+
+.qr img{
+width:100px;
+background:#f0f4ff;
+padding:.5rem;
+border-radius:10px;
+}
+
+.link{
+font-family:'DM Mono',monospace;
+font-size:.75rem;
+background:rgba(79,142,255,.06);
+border:1px solid rgba(79,142,255,.15);
+padding:.4rem;
+border-radius:6px;
+display:block;
+margin:.4rem 0;
+color:var(--accent);
+word-break:break-all;
+}
+
+.copy-btn{
+border:1px solid var(--border);
+background:none;
+padding:.3rem .7rem;
+font-family:'DM Mono',monospace;
+font-size:.7rem;
+color:var(--muted);
+border-radius:6px;
+cursor:pointer;
+}
+
+/* Download button */
+
+.download{
+display:block;
+text-align:center;
+background:linear-gradient(135deg,var(--accent),#2563eb);
+color:#fff;
+text-decoration:none;
+padding:.9rem;
+border-radius:10px;
+font-weight:700;
+margin-top:1rem;
+}
+
+/* Footer */
+
+footer{
+margin-top:2rem;
+font-family:'DM Mono',monospace;
+font-size:.7rem;
+color:var(--muted);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="card">
+
+<div class="badge">FileShare · ready to download</div>
+
+<div class="file-info">
+<div class="file-icon">{{ get_icon(info.original_name) }}</div>
+
+<div class="file-meta">
+<h2>{{ info.original_name }}</h2>
+<div class="size">{{ info.size_human }}</div>
+</div>
+</div>
+
+{% if info.description %}
+<div class="desc">{{ info.description }}</div>
+{% endif %}
+
+<div class="qr">
+
+<img src="data:image/png;base64,{{ qr_b64 }}">
+
+<div>
+<p style="font-size:.85rem;color:var(--muted)">
+Scan QR or copy link
+</p>
+
+<span class="link" id="dlLink">{{ dl_url }}</span>
+
+<button class="copy-btn" onclick="copyLink()">Copy link</button>
+</div>
+
+</div>
+
+<a class="download" href="/d/{{ file_id }}/file">
+Download {{ info.original_name }}
+</a>
+
+</div>
+
+<footer>FileShare · local network sharing</footer>
+
+<script>
+function copyLink(){
+let text=document.getElementById("dlLink").textContent
+navigator.clipboard.writeText(text)
+}
+</script>
+
 </body>
 </html>
