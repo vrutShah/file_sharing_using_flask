@@ -1,7 +1,3 @@
-Sure! Let's break down this Python code step-by-step. This is a Flask web application for sharing files by uploading them to a server. It also generates QR codes linking to uploaded files to facilitate easy sharing.
-
----
-
 ```python
 import os
 import uuid
@@ -341,6 +337,3 @@ This Python Flask app implements a simple file-sharing service:
 - **Helper features:** File type icons, human-readable file size, local IP detection, QR code generation.
 - Uses HTML templates (`index.html`, `download.html`) to render user interfaces.
 
----
-
-If you want, I can also explain the templates or how to run the app!
