@@ -75,7 +75,7 @@ app.jinja_env.globals["get_icon"] = get_icon
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR  = os.path.join(BASE_DIR, "uploads")
 META_FILE   = os.path.join(BASE_DIR, "metadata.json")
-MAX_MB      = 100
+MAX_MB      = 10000
 app.config["MAX_CONTENT_LENGTH"] = MAX_MB * 1024 * 1024
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -84,7 +84,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 - `BASE_DIR`: Absolute path of the directory where current script runs.
 - `UPLOAD_DIR`: Path where uploaded files are stored. A subfolder called "uploads" of the base directory.
 - `META_FILE`: File to store metadata about uploads (`metadata.json`).
-- `MAX_MB`: Maximum allowed upload size in megabytes (100 MB).
+- `MAX_MB`: Maximum allowed upload size in megabytes (10000 MB).
 - `app.config["MAX_CONTENT_LENGTH"]`: Flask config to limit the max request size.
 - `os.makedirs(...)`: Create the uploads directory if it doesn't exist.
 

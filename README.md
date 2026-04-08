@@ -110,7 +110,7 @@ Any device on the **same Wi-Fi network** can access it.
 
 | Setting | Location | Default |
 |---|---|---|
-| Max file size | `app.py` → `MAX_MB` | `100` MB |
+| Max file size | `app.py` → `MAX_MB` | `10000` MB |
 | Server port | `app.py` → `port` | `5000` |
 | Upload folder | `app.py` → `UPLOAD_DIR` | `./uploads/` |
 | Metadata file | `app.py` → `META_FILE` | `./metadata.json` |

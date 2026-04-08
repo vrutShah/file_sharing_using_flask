@@ -36,7 +36,7 @@ app.jinja_env.globals["get_icon"] = get_icon
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR  = os.path.join(BASE_DIR, "uploads")
 META_FILE   = os.path.join(BASE_DIR, "metadata.json")
-MAX_MB      = 100
+MAX_MB      = 10000
 app.config["MAX_CONTENT_LENGTH"] = MAX_MB * 1024 * 1024
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)

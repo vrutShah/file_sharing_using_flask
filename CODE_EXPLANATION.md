@@ -135,7 +135,7 @@ app.jinja_env.globals["get_icon"] = get_icon
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 META_FILE  = os.path.join(BASE_DIR, "metadata.json")
-MAX_MB     = 100
+MAX_MB     = 10000
 app.config["MAX_CONTENT_LENGTH"] = MAX_MB * 1024 * 1024
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 ```
@@ -145,7 +145,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 | `os.path.abspath(__file__)` | Full path of `app.py` → e.g. `C:/Projects/app.py` |
 | `os.path.dirname(...)` | Strips the filename → `C:/Projects/` |
 | `os.path.join(BASE_DIR, "uploads")` | Cross-platform path → works on Windows `\` and Linux `/` |
-| `MAX_MB * 1024 * 1024` | `100 × 1024 × 1024 = 104,857,600 bytes` = 100 MB limit |
+| `MAX_MB * 1024 * 1024` | `10000 × 1024 × 1024 = 104,857,600 bytes` = 100 MB limit |
 | `MAX_CONTENT_LENGTH` | Flask auto-rejects uploads larger than this with `413 Too Large` |
 | `exist_ok=True` | Creates `uploads/` folder — won't crash if it already exists |
 
